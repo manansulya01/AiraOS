@@ -1,0 +1,16 @@
+build/*
+*.o
+*.a
+*.elf
+*.bin
+*.iso
+*.img
+*.qcow2
+*.raw
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
