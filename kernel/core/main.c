@@ -3,6 +3,7 @@
 #include "interrupts.h"
 #include "terminal.h"
 #include "shell.h"
+#include "memory.h"
 
 struct idt_entry {
     uint16_t offset_low;
@@ -100,6 +101,10 @@ void kernel_main64(uint64_t magic, uint64_t multiboot_info)
     terminal_write("Initializing PIT... ");
     pit_init(100);
     terminal_write("100 Hz\n");
+
+    terminal_write("Initializing memory... ");
+    memory_init(multiboot_info);
+    terminal_write("OK\n");
 
     terminal_write("Initializing keyboard... ");
     keyboard_init();

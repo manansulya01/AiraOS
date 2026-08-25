@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "shell.h"
 #include "terminal.h"
+#include "memory.h"
 
 #define SHELL_BUFFER_SIZE 128
 
@@ -49,6 +50,9 @@ static void shell_execute(void)
     }
     else if (string_equals(command_buffer, "clear")) {
         terminal_clear();
+    }
+    else if (string_equals(command_buffer, "mem")) {
+        memory_print_info();
     }
     else if (string_equals(command_buffer, "info")) {
         terminal_write("AiraOS v0.4\n");

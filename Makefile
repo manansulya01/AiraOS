@@ -60,6 +60,9 @@ $(BUILD)/keyboard.o: kernel/drivers/keyboard.c | $(BUILD)
 $(BUILD)/terminal.o: kernel/drivers/terminal.c | $(BUILD)
 	gcc $(CFLAGS) -c $< -o $@
 
+$(BUILD)/memory.o: kernel/memory/memory.c | $(BUILD)
+	gcc $(CFLAGS) -c $< -o $@
+
 $(BUILD)/shell.o: kernel/shell/shell.c | $(BUILD)
 	gcc $(CFLAGS) -c $< -o $@
 
@@ -75,7 +78,8 @@ $(KERNEL): $(BUILD)/boot.o \
            $(BUILD)/pit.o \
            $(BUILD)/keyboard.o \
            $(BUILD)/terminal.o \
-           $(BUILD)/shell.o
+           $(BUILD)/shell.o \
+           $(BUILD)/memory.o
 	ld $(LDFLAGS) -o $@ $^
 
 iso: $(KERNEL)
