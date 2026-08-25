@@ -2,6 +2,7 @@
 #include "shell.h"
 #include "terminal.h"
 #include "memory.h"
+#include "pit.h"
 
 #define SHELL_BUFFER_SIZE 128
 
@@ -65,12 +66,12 @@ static void shell_execute(void)
     }
     else if (string_equals(command_buffer, "ticks")) {
         terminal_write("Timer ticks: ");
-        terminal_write_hex(0);
+        terminal_write_hex(pit_get_ticks());
         terminal_putchar('\n');
     }
     else if (string_equals(command_buffer, "uptime")) {
         terminal_write("Uptime: ");
-        terminal_write_hex(0);
+        terminal_write_hex(pit_get_ticks());
         terminal_write(" ticks\n");
     }
     else if (string_equals(command_buffer, "reboot")) {
