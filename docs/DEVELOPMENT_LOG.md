@@ -144,3 +144,34 @@ AiraOS v0.2 kernel online.
 ## Result
 
 AiraOS v0.2 is officially verified and complete.
+
+---
+
+# v0.3 — CPU Exception & Interrupt Foundation
+
+**Status: IN PROGRESS**
+
+## Objective
+
+Build the foundational CPU protection and interrupt infrastructure for AiraOS.
+
+## Planned
+
+- Global Descriptor Table (GDT)
+- Interrupt Descriptor Table (IDT)
+- Interrupt service routines (ISR)
+- CPU exception handlers
+- Kernel panic diagnostics
+- QEMU exception verification
+
+## Development State
+
+- v0.2 long mode: COMPLETE
+- GDT: TODO
+- IDT: TODO
+- ISR: TODO
+- Exception handling: TODO
+- Kernel panic: TODO
+- QEMU verification: TODO
+- Documentation: IN PROGRESS
+
