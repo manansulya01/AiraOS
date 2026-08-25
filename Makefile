@@ -11,6 +11,7 @@ CFLAGS := -m64 \
           -nostdlib \
           -nostartfiles \
           -nodefaultlibs \
+          -Iinclude \
           -Wall \
           -Wextra
 
@@ -26,10 +27,27 @@ $(BUILD):
 $(BUILD)/boot.o: arch/x86_64/boot/entry.asm | $(BUILD)
 	nasm -f elf64 $< -o $@
 
+$(BUILD)/gdt.o: arch/x86_64/cpu/gdt.asm | $(BUILD)
+	nasm -f elf64 $< -o $@
+
+$(BUILD)/idt.o: arch/x86_64/interrupts/idt.asm | $(BUILD)
+	nasm -f elf64 $< -o $@
+
+$(BUILD)/isr.o: arch/x86_64/interrupts/isr.asm | $(BUILD)
+	nasm -f elf64 $< -o $@
+
 $(BUILD)/kernel.o: kernel/core/main.c | $(BUILD)
 	gcc $(CFLAGS) -c $< -o $@
 
-$(KERNEL): $(BUILD)/boot.o $(BUILD)/kernel.o
+$(BUILD)/panic.o: kernel/core/panic.c | $(BUILD)
+	gcc $(CFLAGS) -c $< -o $@
+
+$(KERNEL): $(BUILD)/boot.o \
+            $(BUILD)/gdt.o \
+            $(BUILD)/idt.o \
+            $(BUILD)/isr.o \
+            $(BUILD)/kernel.o \
+            $(BUILD)/panic.o
 	ld $(LDFLAGS) -o $@ $^
 
 iso: $(KERNEL)
