@@ -86,7 +86,7 @@ A milestone is not complete until every stage succeeds.
 | Version | Component | Status |
 |---|---|---|
 | v0.1 | Bootable kernel | COMPLETE |
-| v0.2 | x86_64 long mode | IN PROGRESS |
+| v0.2 | x86_64 long mode | COMPLETE |
 | v0.3 | GDT / IDT / exceptions | TODO |
 | v0.4 | Physical memory manager | TODO |
 | v0.5 | Virtual memory | TODO |
