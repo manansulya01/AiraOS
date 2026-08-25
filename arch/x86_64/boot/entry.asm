@@ -125,9 +125,17 @@ pdpt_table:
 align 4096
 
 pd_table:
-    ; Present + writable + 2 MiB page.
-    dq 0x0000000000000083
-    times 511 dq 0
+    ; Identity-map the first 1 GiB using 2 MiB pages.
+    ;
+    ; bit 0 = Present
+    ; bit 1 = Writable
+    ; bit 7 = Page Size (2 MiB)
+
+%assign i 0
+%rep 512
+    dq (i * 0x200000) | 0x83
+%assign i i + 1
+%endrep
 
 
 section .bss
