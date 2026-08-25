@@ -6,5 +6,6 @@
 void gdt_init(void);
 void idt_init(void);
 void exception_handler(uint64_t *stack);
+void irq_handler(uint64_t *stack);
 
 #endif

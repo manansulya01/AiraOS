@@ -36,18 +36,38 @@ $(BUILD)/idt.o: arch/x86_64/interrupts/idt.asm | $(BUILD)
 $(BUILD)/isr.o: arch/x86_64/interrupts/isr.asm | $(BUILD)
 	nasm -f elf64 $< -o $@
 
+$(BUILD)/io.o: arch/x86_64/hardware/io.asm | $(BUILD)
+	nasm -f elf64 $< -o $@
+
 $(BUILD)/kernel.o: kernel/core/main.c | $(BUILD)
 	gcc $(CFLAGS) -c $< -o $@
 
 $(BUILD)/panic.o: kernel/core/panic.c | $(BUILD)
 	gcc $(CFLAGS) -c $< -o $@
 
+$(BUILD)/interrupts.o: kernel/core/interrupts.c | $(BUILD)
+	gcc $(CFLAGS) -c $< -o $@
+
+$(BUILD)/pic.o: kernel/drivers/pic.c | $(BUILD)
+	gcc $(CFLAGS) -c $< -o $@
+
+$(BUILD)/pit.o: kernel/drivers/pit.c | $(BUILD)
+	gcc $(CFLAGS) -c $< -o $@
+
+$(BUILD)/keyboard.o: kernel/drivers/keyboard.c | $(BUILD)
+	gcc $(CFLAGS) -c $< -o $@
+
 $(KERNEL): $(BUILD)/boot.o \
             $(BUILD)/gdt.o \
             $(BUILD)/idt.o \
             $(BUILD)/isr.o \
+            $(BUILD)/io.o \
             $(BUILD)/kernel.o \
-            $(BUILD)/panic.o
+            $(BUILD)/panic.o \
+            $(BUILD)/interrupts.o \
+            $(BUILD)/pic.o \
+            $(BUILD)/pit.o \
+            $(BUILD)/keyboard.o
 	ld $(LDFLAGS) -o $@ $^
 
 iso: $(KERNEL)

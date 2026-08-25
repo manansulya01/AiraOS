@@ -52,6 +52,8 @@ extern void isr3(void);
 extern void isr6(void);
 extern void isr13(void);
 extern void isr14(void);
+extern void irq0(void);
+extern void irq1(void);
 
 static struct idt_entry idt[256];
 static struct idt_ptr idtp;
@@ -79,12 +81,19 @@ void idt_init(void)
     idt_set_gate(6, isr6);
     idt_set_gate(13, isr13);
     idt_set_gate(14, isr14);
+    idt_set_gate(32, irq0);
+    idt_set_gate(33, irq1);
 
     idtp.limit = sizeof(idt) - 1;
     idtp.base = (uint64_t)&idt;
 
     idt_load(&idtp);
 }
+
+extern void pic_remap(void);
+extern void pic_unmask_irq(uint8_t irq);
+extern void pit_init(uint32_t frequency);
+extern void keyboard_init(void);
 
 void kernel_main64(uint64_t magic, uint64_t multiboot_info)
 {
@@ -106,17 +115,26 @@ void kernel_main64(uint64_t magic, uint64_t multiboot_info)
 
     print("IDT: OK", 13);
     print("CPU exception infrastructure: ONLINE", 15);
-    print("Testing INT3 breakpoint...", 17);
+    print("Initializing PIC...", 17);
 
-    /*
-     * Controlled exception test.
-     * If the IDT/ISR/panic path works, QEMU will display
-     * the AiraOS Kernel Panic screen with vector 3.
-     */
-    __asm__ volatile ("int3");
+    pic_remap();
+    print("PIC: OK", 18);
 
-    print("ERROR: INT3 returned unexpectedly.", 19);
+    print("Initializing PIT...", 19);
 
-    for (;;)
+    pit_init(100);
+    print("PIT: 100 Hz", 20);
+
+    keyboard_init();
+    pic_unmask_irq(0);
+    pic_unmask_irq(1);
+
+    print("Keyboard IRQ1: ONLINE", 21);
+    print("Hardware interrupts: ENABLED", 22);
+
+    __asm__ volatile ("sti");
+
+    for (;;) {
         __asm__ volatile ("hlt");
+    }
 }
