@@ -2,35 +2,38 @@ BUILD := build
 ISO := $(BUILD)/AiraOS.iso
 KERNEL := $(BUILD)/airaos.bin
 
-CFLAGS := -m32 \
+CFLAGS := -m64 \
           -ffreestanding \
           -fno-pie \
           -fno-stack-protector \
+          -mno-red-zone \
+          -mcmodel=kernel \
           -nostdlib \
           -nostartfiles \
           -nodefaultlibs \
           -Wall \
           -Wextra
 
-LDFLAGS := -m elf_i386 -T arch/x86_64/linker.ld
+LDFLAGS := -m elf_x86_64 -T arch/x86_64/linker.ld
 
-.PHONY: all clean iso run
+.PHONY: all iso run clean
 
 all: iso
 
 $(BUILD):
 	mkdir -p $(BUILD)
 
-$(BUILD)/boot.o: arch/x86_64/boot.asm | $(BUILD)
-	nasm -f elf32 $< -o $@
+$(BUILD)/boot.o: arch/x86_64/boot/entry.asm | $(BUILD)
+	nasm -f elf64 $< -o $@
 
-$(BUILD)/kernel.o: kernel/kernel.c | $(BUILD)
+$(BUILD)/kernel.o: kernel/core/main.c | $(BUILD)
 	gcc $(CFLAGS) -c $< -o $@
 
 $(KERNEL): $(BUILD)/boot.o $(BUILD)/kernel.o
 	ld $(LDFLAGS) -o $@ $^
 
 iso: $(KERNEL)
+	rm -rf $(BUILD)/iso
 	mkdir -p $(BUILD)/iso/boot/grub
 	cp $(KERNEL) $(BUILD)/iso/boot/airaos.bin
 	cp boot/grub.cfg $(BUILD)/iso/boot/grub/grub.cfg
@@ -39,8 +42,7 @@ iso: $(KERNEL)
 run: iso
 	qemu-system-x86_64 \
 		-cdrom $(ISO) \
-		-m 256M \
-		-serial stdio
+		-m 256M
 
 clean:
 	rm -rf $(BUILD)
