@@ -57,17 +57,25 @@ $(BUILD)/pit.o: kernel/drivers/pit.c | $(BUILD)
 $(BUILD)/keyboard.o: kernel/drivers/keyboard.c | $(BUILD)
 	gcc $(CFLAGS) -c $< -o $@
 
+$(BUILD)/terminal.o: kernel/drivers/terminal.c | $(BUILD)
+	gcc $(CFLAGS) -c $< -o $@
+
+$(BUILD)/shell.o: kernel/shell/shell.c | $(BUILD)
+	gcc $(CFLAGS) -c $< -o $@
+
 $(KERNEL): $(BUILD)/boot.o \
-            $(BUILD)/gdt.o \
-            $(BUILD)/idt.o \
-            $(BUILD)/isr.o \
-            $(BUILD)/io.o \
-            $(BUILD)/kernel.o \
-            $(BUILD)/panic.o \
-            $(BUILD)/interrupts.o \
-            $(BUILD)/pic.o \
-            $(BUILD)/pit.o \
-            $(BUILD)/keyboard.o
+           $(BUILD)/gdt.o \
+           $(BUILD)/idt.o \
+           $(BUILD)/isr.o \
+           $(BUILD)/io.o \
+           $(BUILD)/kernel.o \
+           $(BUILD)/panic.o \
+           $(BUILD)/interrupts.o \
+           $(BUILD)/pic.o \
+           $(BUILD)/pit.o \
+           $(BUILD)/keyboard.o \
+           $(BUILD)/terminal.o \
+           $(BUILD)/shell.o
 	ld $(LDFLAGS) -o $@ $^
 
 iso: $(KERNEL)

@@ -1,20 +1,9 @@
 #include <stdint.h>
+
 #include "pic.h"
 #include "pit.h"
 #include "keyboard.h"
-
-static volatile uint16_t *const VGA = (uint16_t *)0xB8000;
-
-static void print_hex8(uint8_t value, int row, int col)
-{
-    const char *hex = "0123456789ABCDEF";
-
-    VGA[row * 80 + col] =
-        ((uint16_t)0x0F << 8) | hex[(value >> 4) & 0xF];
-
-    VGA[row * 80 + col + 1] =
-        ((uint16_t)0x0F << 8) | hex[value & 0xF];
-}
+#include "shell.h"
 
 void irq_handler(uint64_t *stack)
 {
@@ -27,11 +16,12 @@ void irq_handler(uint64_t *stack)
     else if (vector == 33) {
         keyboard_irq();
 
-        print_hex8(
-            keyboard_last_scancode(),
-            20,
-            25
+        char c = keyboard_scancode_to_ascii(
+            keyboard_last_scancode()
         );
+
+        if (c)
+            shell_handle_char(c);
 
         pic_eoi(1);
     }

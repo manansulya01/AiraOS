@@ -6,5 +6,6 @@
 void keyboard_init(void);
 void keyboard_irq(void);
 uint8_t keyboard_last_scancode(void);
+char keyboard_scancode_to_ascii(uint8_t scancode);
 
 #endif

@@ -1,33 +1,8 @@
 #include <stdint.h>
+
 #include "interrupts.h"
-
-static volatile uint16_t *const VGA = (uint16_t *)0xB8000;
-
-static void clear_screen(void)
-{
-    for (int i = 0; i < 80 * 25; i++)
-        VGA[i] = ((uint16_t)0x07 << 8) | ' ';
-}
-
-static void print(const char *text, int row)
-{
-    for (int col = 0; text[col] != '\0'; col++)
-        VGA[row * 80 + col] =
-            ((uint16_t)0x0F << 8) | (uint8_t)text[col];
-}
-
-static void print_hex(uint64_t value, int row)
-{
-    const char *hex = "0123456789ABCDEF";
-
-    print("0x", row);
-
-    for (int i = 0; i < 16; i++) {
-        VGA[row * 80 + 2 + i] =
-            ((uint16_t)0x0F << 8) |
-            (uint8_t)hex[(value >> ((15 - i) * 4)) & 0xF];
-    }
-}
+#include "terminal.h"
+#include "shell.h"
 
 struct idt_entry {
     uint16_t offset_low;
@@ -55,6 +30,13 @@ extern void isr14(void);
 extern void irq0(void);
 extern void irq1(void);
 
+extern void gdt_init(void);
+
+extern void pic_remap(void);
+extern void pic_unmask_irq(uint8_t irq);
+extern void pit_init(uint32_t frequency);
+extern void keyboard_init(void);
+
 static struct idt_entry idt[256];
 static struct idt_ptr idtp;
 
@@ -62,13 +44,13 @@ static void idt_set_gate(int vector, void (*handler)(void))
 {
     uint64_t address = (uint64_t)handler;
 
-    idt[vector].offset_low  = address & 0xFFFF;
-    idt[vector].selector    = 0x08;
-    idt[vector].ist        = 0;
-    idt[vector].type_attr  = 0x8E;
-    idt[vector].offset_mid = (address >> 16) & 0xFFFF;
+    idt[vector].offset_low   = address & 0xFFFF;
+    idt[vector].selector     = 0x08;
+    idt[vector].ist         = 0;
+    idt[vector].type_attr   = 0x8E;
+    idt[vector].offset_mid  = (address >> 16) & 0xFFFF;
     idt[vector].offset_high = (address >> 32) & 0xFFFFFFFF;
-    idt[vector].zero = 0;
+    idt[vector].zero        = 0;
 }
 
 void idt_init(void)
@@ -81,6 +63,7 @@ void idt_init(void)
     idt_set_gate(6, isr6);
     idt_set_gate(13, isr13);
     idt_set_gate(14, isr14);
+
     idt_set_gate(32, irq0);
     idt_set_gate(33, irq1);
 
@@ -90,47 +73,44 @@ void idt_init(void)
     idt_load(&idtp);
 }
 
-extern void pic_remap(void);
-extern void pic_unmask_irq(uint8_t irq);
-extern void pit_init(uint32_t frequency);
-extern void keyboard_init(void);
-
 void kernel_main64(uint64_t magic, uint64_t multiboot_info)
 {
     (void)magic;
     (void)multiboot_info;
 
-    clear_screen();
+    terminal_init();
 
-    print("AiraOS", 6);
-    print("x86_64 long mode active.", 8);
-    print("Initializing GDT...", 10);
+    terminal_write("========================================\n");
+    terminal_write("              AiraOS v0.4\n");
+    terminal_write("        Interactive Kernel Shell\n");
+    terminal_write("========================================\n\n");
 
+    terminal_write("Initializing GDT... ");
     gdt_init();
+    terminal_write("OK\n");
 
-    print("GDT: OK", 11);
-    print("Initializing IDT...", 12);
-
+    terminal_write("Initializing IDT... ");
     idt_init();
+    terminal_write("OK\n");
 
-    print("IDT: OK", 13);
-    print("CPU exception infrastructure: ONLINE", 15);
-    print("Initializing PIC...", 17);
-
+    terminal_write("Initializing PIC... ");
     pic_remap();
-    print("PIC: OK", 18);
+    terminal_write("OK\n");
 
-    print("Initializing PIT...", 19);
-
+    terminal_write("Initializing PIT... ");
     pit_init(100);
-    print("PIT: 100 Hz", 20);
+    terminal_write("100 Hz\n");
 
+    terminal_write("Initializing keyboard... ");
     keyboard_init();
+    terminal_write("IRQ1 ONLINE\n");
+
     pic_unmask_irq(0);
     pic_unmask_irq(1);
 
-    print("Keyboard IRQ1: ONLINE", 21);
-    print("Hardware interrupts: ENABLED", 22);
+    terminal_write("Hardware interrupts: ENABLED\n\n");
+
+    shell_init();
 
     __asm__ volatile ("sti");
 
