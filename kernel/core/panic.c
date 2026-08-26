@@ -58,7 +58,13 @@ static const char *exception_name(uint64_t vector)
     }
 }
 
-void kernel_panic(uint64_t vector, uint64_t error_code)
+void kernel_panic(
+    uint64_t vector,
+    uint64_t error_code,
+    uint64_t rip,
+    uint64_t rsp,
+    uint64_t cr2
+)
 {
     clear_screen();
 
@@ -75,7 +81,16 @@ void kernel_panic(uint64_t vector, uint64_t error_code)
     print_at("Error Code:", 16, 20);
     print_hex(error_code, 16, 32);
 
-    print_at("CPU HALTED.", 19, 20);
+    print_at("RIP:", 18, 20);
+    print_hex(rip, 18, 32);
+
+    print_at("RSP:", 20, 20);
+    print_hex(rsp, 20, 32);
+
+    print_at("CR2:", 22, 20);
+    print_hex(cr2, 22, 32);
+
+    print_at("CPU HALTED.", 24, 20);
 
     for (;;) {
         __asm__ volatile ("cli; hlt");
@@ -95,6 +110,11 @@ void exception_handler(uint64_t *stack)
      */
     uint64_t vector = stack[15];
     uint64_t error  = stack[16];
+    uint64_t rip    = stack[17];
+    uint64_t rsp    = (uint64_t)stack;
 
-    kernel_panic(vector, error);
+    uint64_t cr2;
+    __asm__ volatile ("mov %%cr2, %0" : "=r"(cr2));
+
+    kernel_panic(vector, error, rip, rsp, cr2);
 }

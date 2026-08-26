@@ -115,6 +115,10 @@ irq_common:
     mov rdi, rsp
     call irq_handler
 
+    ; irq_handler returns the interrupt-frame RSP
+    ; that should be restored.
+    mov rsp, rax
+
     pop rax
     pop rbx
     pop rcx

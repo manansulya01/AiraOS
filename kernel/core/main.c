@@ -4,6 +4,7 @@
 #include "terminal.h"
 #include "shell.h"
 #include "memory.h"
+#include "scheduler.h"
 
 struct idt_entry {
     uint16_t offset_low;
@@ -37,6 +38,7 @@ extern void pic_remap(void);
 extern void pic_unmask_irq(uint8_t irq);
 extern void pit_init(uint32_t frequency);
 extern void keyboard_init(void);
+extern void task_tests_init(void);
 
 static struct idt_entry idt[256];
 static struct idt_ptr idtp;
@@ -105,6 +107,11 @@ void kernel_main64(uint64_t magic, uint64_t multiboot_info)
     terminal_write("Initializing memory... ");
     memory_init(multiboot_info);
     terminal_write("OK\n");
+
+    terminal_write("Initializing scheduler... ");
+    scheduler_init();
+    task_tests_init();
+    terminal_write("TASKS ONLINE\n");
 
     terminal_write("Initializing keyboard... ");
     keyboard_init();

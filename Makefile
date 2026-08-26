@@ -63,6 +63,15 @@ $(BUILD)/terminal.o: kernel/drivers/terminal.c | $(BUILD)
 $(BUILD)/memory.o: kernel/memory/memory.c | $(BUILD)
 	gcc $(CFLAGS) -c $< -o $@
 
+$(BUILD)/scheduler.o: kernel/core/scheduler.c | $(BUILD)
+	gcc $(CFLAGS) -c $< -o $@
+
+$(BUILD)/task.o: kernel/task/task.c | $(BUILD)
+	gcc $(CFLAGS) -c $< -o $@
+
+$(BUILD)/test_tasks.o: kernel/task/test_tasks.c | $(BUILD)
+	gcc $(CFLAGS) -c $< -o $@
+
 $(BUILD)/shell.o: kernel/shell/shell.c | $(BUILD)
 	gcc $(CFLAGS) -c $< -o $@
 
@@ -79,7 +88,10 @@ $(KERNEL): $(BUILD)/boot.o \
            $(BUILD)/keyboard.o \
            $(BUILD)/terminal.o \
            $(BUILD)/shell.o \
-           $(BUILD)/memory.o
+           $(BUILD)/memory.o \
+           $(BUILD)/scheduler.o \
+           $(BUILD)/task.o \
+           $(BUILD)/test_tasks.o
 	ld $(LDFLAGS) -o $@ $^
 
 iso: $(KERNEL)
