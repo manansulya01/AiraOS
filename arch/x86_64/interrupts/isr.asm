@@ -11,6 +11,20 @@ global isr3
 global isr6
 global isr13
 global isr14
+global isr1
+global isr2
+global isr4
+global isr5
+global isr7
+global isr8
+global isr10
+global isr11
+global isr12
+global isr16
+global isr17
+global isr18
+global isr19
+global isr20
 global irq0
 global irq1
 
@@ -40,6 +54,72 @@ isr13:
 
 isr14:
     push 14
+    jmp exception_common
+
+isr1:
+    push 0
+    push 1
+    jmp exception_common
+
+isr2:
+    push 0
+    push 2
+    jmp exception_common
+
+isr4:
+    push 0
+    push 4
+    jmp exception_common
+
+isr5:
+    push 0
+    push 5
+    jmp exception_common
+
+isr7:
+    push 0
+    push 7
+    jmp exception_common
+
+isr8:
+    push 0
+    push 8
+    jmp exception_common
+
+isr10:
+    push 10
+    jmp exception_common
+
+isr11:
+    push 11
+    jmp exception_common
+
+isr12:
+    push 12
+    jmp exception_common
+
+isr16:
+    push 0
+    push 16
+    jmp exception_common
+
+isr17:
+    push 17
+    jmp exception_common
+
+isr18:
+    push 0
+    push 18
+    jmp exception_common
+
+isr19:
+    push 0
+    push 19
+    jmp exception_common
+
+isr20:
+    push 0
+    push 20
     jmp exception_common
 
 irq0:

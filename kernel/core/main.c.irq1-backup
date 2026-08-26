@@ -2,7 +2,6 @@
 
 #include "interrupts.h"
 #include "pit.h"
-#include "keyboard.h"
 #include "terminal.h"
 #include "shell.h"
 #include "memory.h"
@@ -33,20 +32,6 @@ extern void isr3(void);
 extern void isr6(void);
 extern void isr13(void);
 extern void isr14(void);
-extern void isr1(void);
-extern void isr2(void);
-extern void isr4(void);
-extern void isr5(void);
-extern void isr7(void);
-extern void isr8(void);
-extern void isr10(void);
-extern void isr11(void);
-extern void isr12(void);
-extern void isr16(void);
-extern void isr17(void);
-extern void isr18(void);
-extern void isr19(void);
-extern void isr20(void);
 extern void irq0(void);
 extern void irq1(void);
 
@@ -80,24 +65,10 @@ void idt_init(void)
         idt_set_gate(i, isr_default);
 
     idt_set_gate(0, isr0);
-    idt_set_gate(1, isr1);
-    idt_set_gate(2, isr2);
     idt_set_gate(3, isr3);
-    idt_set_gate(4, isr4);
-    idt_set_gate(5, isr5);
     idt_set_gate(6, isr6);
-    idt_set_gate(7, isr7);
-    idt_set_gate(8, isr8);
-    idt_set_gate(10, isr10);
-    idt_set_gate(11, isr11);
-    idt_set_gate(12, isr12);
     idt_set_gate(13, isr13);
     idt_set_gate(14, isr14);
-    idt_set_gate(16, isr16);
-    idt_set_gate(17, isr17);
-    idt_set_gate(18, isr18);
-    idt_set_gate(19, isr19);
-    idt_set_gate(20, isr20);
 
     idt_set_gate(32, irq0);
     idt_set_gate(33, irq1);
@@ -116,7 +87,7 @@ void kernel_main64(uint64_t magic, uint64_t multiboot_info)
     terminal_init();
 
     terminal_write("========================================\n");
-    terminal_write("        AiraOS IRQ0 + IRQ1 TEST\n");
+    terminal_write("          AiraOS IRQ0 TEST\n");
     terminal_write("========================================\n\n");
 
     terminal_write("Initializing GDT... ");
@@ -135,46 +106,48 @@ void kernel_main64(uint64_t magic, uint64_t multiboot_info)
     pit_init(100);
     terminal_write("100 Hz\n");
 
-    terminal_write("Initializing keyboard... ");
-    keyboard_init();
-    terminal_write("OK\n");
-
-    terminal_write("Unmasking IRQ0 + IRQ1... ");
+    terminal_write("Unmasking IRQ0... ");
     pic_unmask_irq(0);
-    pic_unmask_irq(1);
     terminal_write("OK\n");
 
     terminal_write("Enabling interrupts... ");
     __asm__ volatile ("sti");
     terminal_write("OK\n\n");
 
-    terminal_write("TYPE ON THE KEYBOARD:\n");
+    terminal_write("IRQ0 TIMER TEST RUNNING\n");
 
-    uint64_t last_tick_report = 0;
+    uint64_t last_report = 0;
 
     for (;;) {
-        /*
-         * IRQ1 places translated characters into the keyboard queue.
-         * The kernel reads them outside the interrupt handler.
-         */
-        char c;
+        uint64_t now = pit_get_ticks();
 
-        while ((c = keyboard_get_char()) != 0) {
-            terminal_putchar(c);
-        }
+        if (now >= last_report + 100) {
+            last_report = now;
 
-        /*
-         * Keep IRQ0 alive too, so we know both hardware IRQ paths
-         * continue functioning simultaneously.
-         */
-        uint64_t ticks = pit_get_ticks();
+            terminal_write("IRQ0 ticks: ");
 
-        if (ticks >= last_tick_report + 100) {
-            last_tick_report = ticks;
+            char digits[21];
+            int pos = 0;
 
-            terminal_write("\n[TIMER ");
-            terminal_write_hex(ticks);
-            terminal_write("]\n");
+            if (now == 0) {
+                digits[pos++] = '0';
+            } else {
+                char reversed[21];
+                int rpos = 0;
+
+                while (now > 0) {
+                    reversed[rpos++] = '0' + (now % 10);
+                    now /= 10;
+                }
+
+                while (rpos > 0)
+                    digits[pos++] = reversed[--rpos];
+            }
+
+            digits[pos] = '\0';
+
+            terminal_write(digits);
+            terminal_write("\n");
         }
 
         __asm__ volatile ("hlt");

@@ -4,6 +4,7 @@
 #include "memory.h"
 #include "pit.h"
 #include "keyboard.h"
+#include "framebuffer.h"
 
 #define SHELL_BUFFER_SIZE 128
 
@@ -48,6 +49,7 @@ static void shell_execute(void)
         terminal_write("  info    - kernel information\n");
         terminal_write("  ticks   - timer tick counter\n");
         terminal_write("  uptime  - system uptime\n");
+        terminal_write("  fb      - framebuffer information\n");
         terminal_write("  reboot  - reboot the machine\n");
     }
     else if (string_equals(command_buffer, "clear")) {
@@ -74,6 +76,35 @@ static void shell_execute(void)
         terminal_write("Uptime: ");
         terminal_write_hex(pit_get_ticks());
         terminal_write(" ticks\n");
+    }
+    else if (string_equals(command_buffer, "fb")) {
+        const framebuffer_t *fb = framebuffer_get();
+
+        terminal_write("Framebuffer\n");
+        terminal_write("------------\n");
+
+        terminal_write("Status: ");
+        terminal_write(fb->enabled ? "ONLINE\n" : "OFFLINE\n");
+
+        terminal_write("Address: ");
+        terminal_write_hex(fb->address);
+        terminal_putchar('\n');
+
+        terminal_write("Width: ");
+        terminal_write_hex(fb->width);
+        terminal_putchar('\n');
+
+        terminal_write("Height: ");
+        terminal_write_hex(fb->height);
+        terminal_putchar('\n');
+
+        terminal_write("Pitch: ");
+        terminal_write_hex(fb->pitch);
+        terminal_putchar('\n');
+
+        terminal_write("BPP: ");
+        terminal_write_hex(fb->bpp);
+        terminal_putchar('\n');
     }
     else if (string_equals(command_buffer, "reboot")) {
         terminal_write("Reboot requested.\n");

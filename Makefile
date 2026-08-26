@@ -60,6 +60,9 @@ $(BUILD)/keyboard.o: kernel/drivers/keyboard.c | $(BUILD)
 $(BUILD)/terminal.o: kernel/drivers/terminal.c | $(BUILD)
 	gcc $(CFLAGS) -c $< -o $@
 
+$(BUILD)/framebuffer.o: kernel/drivers/framebuffer.c | $(BUILD)
+	gcc $(CFLAGS) -c $< -o $@
+
 $(BUILD)/memory.o: kernel/memory/memory.c | $(BUILD)
 	gcc $(CFLAGS) -c $< -o $@
 
@@ -67,6 +70,9 @@ $(BUILD)/scheduler.o: kernel/core/scheduler.c | $(BUILD)
 	gcc $(CFLAGS) -c $< -o $@
 
 $(BUILD)/task.o: kernel/task/task.c | $(BUILD)
+	gcc $(CFLAGS) -c $< -o $@
+
+$(BUILD)/fb_demo.o: kernel/task/fb_demo.c | $(BUILD)
 	gcc $(CFLAGS) -c $< -o $@
 
 $(BUILD)/test_tasks.o: kernel/task/test_tasks.c | $(BUILD)
@@ -87,10 +93,12 @@ $(KERNEL): $(BUILD)/boot.o \
            $(BUILD)/pit.o \
            $(BUILD)/keyboard.o \
            $(BUILD)/terminal.o \
+           $(BUILD)/framebuffer.o \
            $(BUILD)/shell.o \
            $(BUILD)/memory.o \
            $(BUILD)/scheduler.o \
            $(BUILD)/task.o \
+           $(BUILD)/fb_demo.o \
            $(BUILD)/test_tasks.o
 	ld $(LDFLAGS) -o $@ $^
 

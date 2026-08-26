@@ -1,8 +1,6 @@
 #include <stdint.h>
 
 #include "interrupts.h"
-#include "pit.h"
-#include "keyboard.h"
 #include "terminal.h"
 #include "shell.h"
 #include "memory.h"
@@ -33,20 +31,6 @@ extern void isr3(void);
 extern void isr6(void);
 extern void isr13(void);
 extern void isr14(void);
-extern void isr1(void);
-extern void isr2(void);
-extern void isr4(void);
-extern void isr5(void);
-extern void isr7(void);
-extern void isr8(void);
-extern void isr10(void);
-extern void isr11(void);
-extern void isr12(void);
-extern void isr16(void);
-extern void isr17(void);
-extern void isr18(void);
-extern void isr19(void);
-extern void isr20(void);
 extern void irq0(void);
 extern void irq1(void);
 
@@ -80,24 +64,10 @@ void idt_init(void)
         idt_set_gate(i, isr_default);
 
     idt_set_gate(0, isr0);
-    idt_set_gate(1, isr1);
-    idt_set_gate(2, isr2);
     idt_set_gate(3, isr3);
-    idt_set_gate(4, isr4);
-    idt_set_gate(5, isr5);
     idt_set_gate(6, isr6);
-    idt_set_gate(7, isr7);
-    idt_set_gate(8, isr8);
-    idt_set_gate(10, isr10);
-    idt_set_gate(11, isr11);
-    idt_set_gate(12, isr12);
     idt_set_gate(13, isr13);
     idt_set_gate(14, isr14);
-    idt_set_gate(16, isr16);
-    idt_set_gate(17, isr17);
-    idt_set_gate(18, isr18);
-    idt_set_gate(19, isr19);
-    idt_set_gate(20, isr20);
 
     idt_set_gate(32, irq0);
     idt_set_gate(33, irq1);
@@ -115,8 +85,33 @@ void kernel_main64(uint64_t magic, uint64_t multiboot_info)
 
     terminal_init();
 
+    framebuffer_init(multiboot_info);
+
+    const framebuffer_t *fb = framebuffer_get();
+
+    if (fb->enabled) {
+        framebuffer_clear(0x00101820);
+
+        framebuffer_fill_rect(
+            fb->width / 2 - 150,
+            fb->height / 2 - 75,
+            300,
+            150,
+            0x00203050
+        );
+
+        framebuffer_fill_rect(
+            fb->width / 2 - 100,
+            fb->height / 2 - 25,
+            200,
+            50,
+            0x004080FF
+        );
+    }
+
     terminal_write("========================================\n");
-    terminal_write("        AiraOS IRQ0 + IRQ1 TEST\n");
+    terminal_write("              AiraOS v0.4\n");
+    terminal_write("        Interactive Kernel Shell\n");
     terminal_write("========================================\n\n");
 
     terminal_write("Initializing GDT... ");
@@ -135,48 +130,36 @@ void kernel_main64(uint64_t magic, uint64_t multiboot_info)
     pit_init(100);
     terminal_write("100 Hz\n");
 
+    terminal_write("Initializing memory... ");
+    memory_init(multiboot_info);
+    terminal_write("OK\n");
+
+    terminal_write("Initializing scheduler... ");
+    scheduler_init();
+    task_tests_init();
+    terminal_write("TASKS ONLINE\n");
+
     terminal_write("Initializing keyboard... ");
     keyboard_init();
-    terminal_write("OK\n");
+    terminal_write("IRQ1 ONLINE\n");
 
-    terminal_write("Unmasking IRQ0 + IRQ1... ");
     pic_unmask_irq(0);
     pic_unmask_irq(1);
-    terminal_write("OK\n");
 
-    terminal_write("Enabling interrupts... ");
+    terminal_write("Hardware interrupts: ENABLED\n\n");
+
+    shell_init();
+
+    /*
+     * The shell is now a scheduler-managed task.
+     * Keyboard IRQs only place characters into the
+     * keyboard input queue.
+     */
+    task_create(shell_task);
+
     __asm__ volatile ("sti");
-    terminal_write("OK\n\n");
-
-    terminal_write("TYPE ON THE KEYBOARD:\n");
-
-    uint64_t last_tick_report = 0;
 
     for (;;) {
-        /*
-         * IRQ1 places translated characters into the keyboard queue.
-         * The kernel reads them outside the interrupt handler.
-         */
-        char c;
-
-        while ((c = keyboard_get_char()) != 0) {
-            terminal_putchar(c);
-        }
-
-        /*
-         * Keep IRQ0 alive too, so we know both hardware IRQ paths
-         * continue functioning simultaneously.
-         */
-        uint64_t ticks = pit_get_ticks();
-
-        if (ticks >= last_tick_report + 100) {
-            last_tick_report = ticks;
-
-            terminal_write("\n[TIMER ");
-            terminal_write_hex(ticks);
-            terminal_write("]\n");
-        }
-
         __asm__ volatile ("hlt");
     }
 }

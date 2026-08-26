@@ -26,6 +26,7 @@ _start:
     cli
 
     mov esp, stack_top
+    and esp, 0xFFFFFFF0
 
     ; Multiboot2 arguments supplied by GRUB.
     mov [multiboot_magic], eax
