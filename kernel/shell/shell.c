@@ -3,6 +3,7 @@
 #include "terminal.h"
 #include "memory.h"
 #include "pit.h"
+#include "keyboard.h"
 
 #define SHELL_BUFFER_SIZE 128
 
@@ -100,7 +101,20 @@ static void shell_execute(void)
 void shell_init(void)
 {
     command_length = 0;
+}
+
+void shell_task(void)
+{
     shell_prompt();
+
+    for (;;) {
+        char c = keyboard_get_char();
+
+        if (c)
+            shell_handle_char(c);
+
+        __asm__ volatile ("pause");
+    }
 }
 
 void shell_handle_char(char c)

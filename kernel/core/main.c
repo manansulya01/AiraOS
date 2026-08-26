@@ -5,6 +5,7 @@
 #include "shell.h"
 #include "memory.h"
 #include "scheduler.h"
+#include "task.h"
 
 struct idt_entry {
     uint16_t offset_low;
@@ -123,6 +124,13 @@ void kernel_main64(uint64_t magic, uint64_t multiboot_info)
     terminal_write("Hardware interrupts: ENABLED\n\n");
 
     shell_init();
+
+    /*
+     * The shell is now a scheduler-managed task.
+     * Keyboard IRQs only place characters into the
+     * keyboard input queue.
+     */
+    task_create(shell_task);
 
     __asm__ volatile ("sti");
 
